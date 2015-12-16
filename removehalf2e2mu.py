@@ -1,4 +1,8 @@
+newscale = "6.2500000E+01"
+
 def removehalf2e2mu(*files):
+    if newscale:
+        print "Warning: changing the scale!"
     total4l = 0
     total2e2mu = 0
     totalnwritten2e2mu = 0
@@ -15,15 +19,25 @@ def removehalf2e2mu(*files):
         with open(filename) as f, open(newfilename, "w") as newf:
             thisevent = ""
             inevent = False
+            lineinevent = 0
             for line in f:
                 if "<event>" in line:
                     newf.write(thisevent)
                     thisevent = ""
                     inevent = True
+                    lineinevent = 0
                     electrons = 0
                     muons = 0
 
+                if inevent:
+                    data = line.split()
+                    if lineinevent == 1:
+                        if newscale:
+                            scalestr = data[3]
+                            line = line.replace(scalestr, newscale)
+
                 thisevent += line
+                lineinevent += 1
 
                 if "</event>" in line:
                     inevent = False
@@ -42,7 +56,6 @@ def removehalf2e2mu(*files):
 
                 if inevent:
                     try:
-                        data = line.split()
                         id = int(data[0])
                         if abs(id) == 11:
                             electrons += 1
