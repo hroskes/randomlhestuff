@@ -1,4 +1,8 @@
+doremovehalf2e2mu = False
 newscale = "6.2500000E+01"
+
+#doremovehalf2e2mu = True
+#newscale = "3.7500000E+02"
 
 def removehalf2e2mu(*files):
     if newscale:
@@ -46,7 +50,7 @@ def removehalf2e2mu(*files):
                         writethisevent = True
                     elif electrons == 2 and muons == 2:
                         eventcounter2e2mu += 1
-                        writethisevent = bool((total2e2mu + eventcounter2e2mu) % 2)
+                        writethisevent = not doremovehalf2e2mu or bool((total2e2mu + eventcounter2e2mu) % 2)
                         nwritten2e2mu += writethisevent
                     else:
                         raise ValueError("electrons=%i, muons=%i" % (electrons, muons))
