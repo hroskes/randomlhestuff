@@ -1,10 +1,12 @@
 def removehalf2e2mu(*files):
     total4l = 0
     total2e2mu = 0
+    totalnwritten2e2mu = 0
 
     for filename in files:
         eventcounter4l = 0
         eventcounter2e2mu = 0
+        nwritten2e2mu = 0
         print filename + ":"
         newfilename = filename.replace(".lhe", "half2e2mu.lhe")
         if newfilename == filename:
@@ -53,9 +55,14 @@ def removehalf2e2mu(*files):
 
             total2e2mu += eventcounter2e2mu
             total4l += eventcounter4l
+            totalnwritten2e2mu += nwritten2e2mu
 
             print "    2e2mu: %i --> %i" % (eventcounter2e2mu, nwritten2e2mu)
             print "       4l: %i --> %i" % (eventcounter4l, eventcounter4l)
+
+    print "Total:"
+    print "    2e2mu: %i --> %i" % (total2e2mu, totalnwritten2e2mu)
+    print "       4l: %i --> %i" % (total4l, total4l)
 
 if __name__ == "__main__":
     import sys
