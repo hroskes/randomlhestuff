@@ -1,8 +1,10 @@
-doremovehalf2e2mu = False
-newscale = "6.2500000E+01"
+import os
 
-#doremovehalf2e2mu = True
-#newscale = "3.7500000E+02"
+#doremovehalf2e2mu = False
+#newscale = "6.2500000E+01"
+
+doremovehalf2e2mu = True
+newscale = "3.7500000E+02"
 
 def removehalf2e2mu(*files):
     if newscale:
@@ -16,9 +18,11 @@ def removehalf2e2mu(*files):
         eventcounter2e2mu = 0
         nwritten2e2mu = 0
         print filename + ":"
-        newfilename = filename.replace(".lhe", "half2e2mu.lhe")
+        newfilename = filename.replace(".lhe", "_fixscale.lhe")
         if newfilename == filename:
             raise ValueError("Don't overwrite the old file!")
+        if os.path.exists(newfilename) or "_fixscale.lhe" in filename:
+            continue
 
         with open(filename) as f, open(newfilename, "w") as newf:
             thisevent = ""
