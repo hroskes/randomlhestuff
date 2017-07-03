@@ -1,5 +1,5 @@
 import ROOT
-from ZZMatrixElement.PythonWrapper.mela import Mela
+from mela import Mela
 
 class LHEFile(object):
     """
@@ -21,13 +21,19 @@ class LHEFile(object):
         self.filename = filename
         if melaargs not in LHEFile.mela:
             LHEFile.mela[melaargs] = Mela(*melaargs)
-            self.mela = LHEFile.mela[melaargs]
+        self.mela = LHEFile.mela[melaargs]
         self.f = open(self.filename)
+        #for event in self: break #initialize mass and xsec
     def __enter__(self, *args, **kwargs):
         self.f.__enter__(*args, **kwargs)
         return self
     def __exit__(self, *args, **kwargs):
         return self.f.__exit__(*args, **kwargs)
+
+    @property
+    def mass(self):
+        if "1TeV" in self.filename: return 1000
+        else: return 125
 
     def __iter__(self):
         event = ""
@@ -44,4 +50,7 @@ class LHEFile(object):
                     print "On line", linenumber
                     raise
                 finally:
-                    self.mela.resetInputEvent()
+                    try:
+                        self.mela.resetInputEvent()
+                    except:
+                        pass
