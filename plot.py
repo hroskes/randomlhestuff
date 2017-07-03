@@ -1,74 +1,89 @@
 #!/usr/bin/env python
 
-from collections import namedtuple
-from lhefile import LHEFile
-from math import pi
-import os
-import ROOT
-from ZZMatrixElement.PythonWrapper.mela import Mela
+import ROOT, style, subprocess
 
-DecayAngles = Mela.DecayAngles
+c = ROOT.TCanvas()
 
-class M4lRange(namedtuple("M4lRange", "low hi")):
-  def __contains__(self, other):
-    return self.low <= other <= self.hi
+tleft = ROOT.TChain("candTree")
+tleft.Add("../JHUGen/JHUGenerator/left.root")
+tleft.Draw("D_LR_E>>hleft(100,0,1)")
+hleft = ROOT.hleft
+hleft.SetLineColor(2)
+tleft.Draw("D_LR_E>>hleftright(100,0,1)", "right/left")
+hleftright = ROOT.hleftright
+hleftright.SetLineColor(7)
 
-plotsbasedir = "plots"
-exts = "png eps root pdf".split()
+tright = ROOT.TChain("candTree")
+tright.Add("../JHUGen/JHUGenerator/right.root")
+tright.Draw("D_LR_E>>hright(100,0,1)")
+hright = ROOT.hright
+hright.SetLineColor(4)
+tright.Draw("D_LR_E>>hrightleft(100,0,1)", "left/right")
+hrightleft = ROOT.hrightleft
+hrightleft.SetLineColor(6)
+tleft.Draw("D_LR_E>>hmixp(100,0,1)", "(left+right+int)/left")
+hmixp = ROOT.hmixp
+hmixp.SetLineColor(ROOT.kGreen+3)
 
-def plots(filenames, m4lranges):
-  m4lranges = [M4lRange(*_) for _ in m4lranges]
-  bins = 100
-  titles = DecayAngles(qH="m_{4l}", m1="m_{Z1}", m2="m_{Z2}", costhetastar="cos#theta*", costheta1="cos#theta_{1}", costheta2="cos#theta_{2}", Phi="#Phi", Phi1="#Phi_{1}")
-  mins = DecayAngles(qH=0, m1=40, m2=0, costhetastar=-1, costheta1=-1, costheta2=-1, Phi=-pi, Phi1=-pi)
-  maxes = DecayAngles(qH=2000, m1=120, m2=60, costhetastar=1, costheta1=1, costheta2=1, Phi=pi, Phi1=pi)
+hstack = ROOT.THStack("hs", "")
+hstack.Add(hleft)
+hstack.Add(hright)
+hstack.Add(hleftright)
+hstack.Add(hrightleft)
+hstack.Add(hmixp)
 
-  hists = {
-           _:
-              DecayAngles(
-                          *(
-                            ROOT.TH1F("{}{}{}".format(name, _.low, _.hi), title, bins, min, max)
-                               for name, title, min, max in zip(DecayAngles._fields, titles, mins, maxes)
-                           )
-                         ) for _ in m4lranges
-          }
+for _ in hstack.GetHists(): _.Scale(1/_.Integral())
 
-  for color, (m4lrange, histset) in enumerate(hists.iteritems()):
-    for h in histset:
-      h.SetLineColor(color)
+l = ROOT.TLegend(.6, .6, .9, .9)
+l.SetFillStyle(0)
+l.SetBorderSize(0)
+l.AddEntry(hleft, "left", "l")
+l.AddEntry(hright, "right", "l")
+l.AddEntry(hleftright, "left rwt to right", "l")
+l.AddEntry(hrightleft, "right rwt to left", "l")
+l.AddEntry(hmixp, "mix #phi=0", "l")
 
-  hstacks = DecayAngles(*(ROOT.THStack(name, title) for name, title in zip(DecayAngles._fields, titles)))
+hstack.Draw("hist nostack")
+hstack.GetXaxis().SetTitle("D_{L/R}")
+l.Draw()
 
-  for filename in filenames:
-    with LHEFile(filename) as f:
-      print filename
-      for i, event in enumerate(f, start=1):
-        decayangles = event.computeDecayAngles()
-        for m4lrange in m4lranges:
-          if decayangles.qH in m4lrange:
-            for hist, value in zip(hists[m4lrange], decayangles):
-              hist.Fill(value)
-        if i % 100 == 0:
-          print "Processed", i, "events"
-    if i % 100 != 0:
-      print "Processed", i, "events"
-    break
+exts = "png eps root pdf C"
+for ext in exts.split(): c.SaveAs("D_LR."+ext)
 
-  for m4lrange in m4lranges:
-    for hist, hstack in zip(hists[m4lrange], hstacks):
-      hstack.Add(hist)
 
-  legend = ROOT.TLegend(.6, .7, .9, .9)
-  for m4lrange in m4lranges:
-    legend.AddEntry(hists[m4lrange][0], "{} GeV < m_{{4l}} < {} GeV".format(*m4lrange), "lpf")
+tleft.Draw("D_LRint_E>>hleftint(100,-1.5e-7,1.5e-7)")
+hleftint = ROOT.hleftint
+hleftint.SetLineColor(2)
+tright.Draw("D_LRint_E>>hrightint(100,-1.5e-7,1.5e-7)")
+hrightint = ROOT.hrightint
+hrightint.SetLineColor(4)
+tleft.Draw("D_LRint_E>>hmixpint(100,-1.5e-7,1.5e-7)", "(left+right+int)/left")
+tleft.Draw("D_LRint_E>>hmixmint(100,-1.5e-7,1.5e-7)", "(left+right-int)/left")
+hmixpint = ROOT.hmixpint
+hmixpint.SetLineColor(ROOT.kGreen+3)
+hmixmint = ROOT.hmixmint
+hmixmint.SetLineColor(1)
 
-  c = ROOT.TCanvas()
-  for hstack, name in zip(hstacks, DecayAngles._fields):
-    hstack.Draw("hist nostack")
-    legend.Draw()
-    for ext in exts:
-      c.SaveAs(os.path.join(plotsbasedir, "{}.{}".format(name, ext)))
+hstack = ROOT.THStack("hs2", "")
+hstack.Add(hleftint)
+hstack.Add(hrightint)
+hstack.Add(hmixpint)
+hstack.Add(hmixmint)
 
-if __name__ == "__main__":
-  directory = "/work-zfs/lhc/meng/highmass/MCFM-7.0.2_wBW3456_BASE_0+m_PRODUCTIONREADY_SM2/Bin/m450d0VBF_BSI_QCD247_ELMU"
-  plots((os.path.join(directory, _) for _ in os.listdir(directory) if _.endswith(".lhe")), [(89.2, 93.2), (170, 190)])
+for _ in hstack.GetHists(): _.Scale(1/_.Integral())
+
+l = ROOT.TLegend(.6, .6, .9, .9)
+l.SetFillStyle(0)
+l.SetBorderSize(0)
+l.AddEntry(hleft, "left", "l")
+l.AddEntry(hright, "right", "l")
+l.AddEntry(hmixpint, "mix #phi=0", "l")
+l.AddEntry(hmixmint, "mix #phi=#pi", "l")
+
+hstack.Draw("hist nostack")
+hstack.GetXaxis().SetTitle("D_{int}^{L/R}")
+l.Draw()
+
+for ext in exts.split(): c.SaveAs("D_LRint."+ext)
+
+subprocess.check_call(["rsync", "-azvI"] + ["D_"+disc+"."+ext for ext in exts.split() for disc in ("LR", "LRint")] + ["hroskes@lxplus.cern.ch:www/contactterms"])
