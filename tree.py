@@ -13,8 +13,8 @@ from mela import TVar
 def lhe2tree(filename):
   newfilename = filename.replace(".lhe", ".root")
   assert os.path.exists(filename)
-  assert not os.path.exists(newfilename)
   f = ROOT.TFile(newfilename, "CREATE")
+  if not f.IsWritable(): return
   t = ROOT.TTree("candTree", "")
   bad = False
   try:
@@ -31,7 +31,7 @@ def lhe2tree(filename):
     t.Branch("SM", SM, "SM/D")
     t.Branch("int", int, "int/D")
     t.Branch("D_L_E", D_L_E, "D_L_E/D")
-    t.Branch("D_R_E", D_L_E, "D_R_E/D")
+    t.Branch("D_R_E", D_R_E, "D_R_E/D")
     t.Branch("D_LR_E", D_LR_E, "D_LR_E/D")
     t.Branch("D_LRint_E", D_LRint_E, "D_LRint_E/D")
 
