@@ -24,7 +24,7 @@ gZeL = gZ*(cVe+cAe)
 gZeR = gZ*(cVe-cAe)
 M_Z = getparameter("M_Z")
 vev = getparameter("vev")
-Lambda_1 = getparameter("Lambda_1")
+Lambda_z1 = getparameter("Lambda_z1")
 Lambda_zgs1 = getparameter("Lambda_zgs1")
 
 def lhe2tree(filename):
@@ -66,10 +66,13 @@ def lhe2tree(filename):
         leftxsec = 3.2287305
         rightxsec = 3.2270333
         SMxsec = 1.4604303E+01
+        L1xsec = 9.955957800124091e-08
+        L1Zgxsec = 2.5195854694239526e-07
       elif lhe.mass == 1000:
         leftxsec = 6.0604581E+02
         rightxsec = 6.0095973E+02
         SMxsec = 7.2953822E+04
+        L1xsec = L1Zgxsec = 1
 
       print filename
       for i, event in enumerate(lhe, start=1):
@@ -95,20 +98,24 @@ def lhe2tree(filename):
 
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
         event.ghz1 = 1
-        event.ehz_R_E = -gZeR * vev * M_Z**2 / (2 * Lambda_1**2)
-        event.ehz_L_E = -gZeL * vev * M_Z**2 / (2 * Lambda_1**2)
+        event.ehz_R_E = -gZeR * vev * M_Z**2 / (2 * Lambda_z1**2)
+        event.ehz_L_E = -gZeL * vev * M_Z**2 / (2 * Lambda_z1**2)
+        event.OnlyVVpr = 1
         L1_contact[0] = event.computeP()
 
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
         event.ghz1 = 1
         event.ehz_R_E = e * vev * M_Z**2 / (2 * Lambda_zgs1**2)
         event.ehz_L_E = e * vev * M_Z**2 / (2 * Lambda_zgs1**2)
+        event.OnlyVVpr = 1
         L1Zg_contact[0] = event.computeP()
 
         left[0] /= leftxsec
         right[0] /= rightxsec
         int[0] /= sqrt(leftxsec*rightxsec)
         SM[0] /= SMxsec
+        L1[0] /= L1xsec
+        L1Zg[0] /= L1Zgxsec
 
         D_L_E[0] = left[0] / (left[0] + SM[0])
         D_R_E[0] = right[0] / (right[0] + SM[0])

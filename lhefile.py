@@ -46,6 +46,8 @@ class LHEFile(object):
                     self.mela.setInputEvent_fromLHE(event, True)
                     yield self.mela
                     event = ""
+                except GeneratorExit:
+                    raise
                 except:
                     print "On line", linenumber
                     raise

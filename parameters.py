@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+from math import sqrt
+
 import os
 import re
 
@@ -12,7 +14,7 @@ def getparameter(name):
            r"(?:\s*,\s*\w*)*\s*"
            r"::\s*"
            +name.lower()+
-           r"\s*=\s*"
+           r"[\s!]*=\s*"
            r"([a-z0-9_.+\-*/(), ]*)"
            r"\s*(?:[!].*)?"
            r"$"
@@ -25,13 +27,14 @@ def getparameter(name):
         r = r.replace("_dp", "")
         r = re.sub(r"\b([0-9.]*)d", r"\1e", r)
         rr = r
+        gev = 1
         while True:
           match2 = re.search(r"\b[a-z_]\w*\b", rr)
           if not match2: break
           match2 = match2.group(0)
-          globals()[match2] = getparameter(match2)
+          if match2 not in globals():
+            globals()[match2] = getparameter(match2)
           rr = rr.replace(match2, "")
-        gev = 1
         r = eval(r)
         if isinstance(r, tuple): r = complex(*r)
         return r
