@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from math import pi
 import ROOT, style, subprocess, sys
 
 def plot(mreso):
@@ -13,26 +14,36 @@ def plot(mreso):
   tSM = ROOT.TChain("candTree")
   tSM.Add("../JHUGen/JHUGenerator/SM"+mreso+".root")
 
-  for disc in "D_LR_E", "D_L_E", "D_R_E":
+  discs = "D_LR_E", "D_L_E", "D_R_E", "D_LRint_E", "costheta1", "costheta2", "costhetastar", "phi", "phi1", "m1", "m2"
 
-    tleft.Draw(disc+">>hleft"+disc+"(100,0,1)")
+  for disc in discs:
+
+    if disc == "D_LRint_E": continue
+
+    if "cos" in disc: dmin, dmax = -1, 1
+    elif "phi" in disc: dmin, dmax = -pi, pi
+    elif disc == "m1": dmin, dmax = 0, 100
+    elif disc == "m2": dmin, dmax = 0, 100
+    else: dmin, dmax = 0, 1
+
+    tleft.Draw(disc+">>hleft"+disc+"(100,{},{})".format(dmin, dmax))
     hleft = getattr(ROOT, "hleft"+disc)
     hleft.SetLineColor(2)
-    tleft.Draw(disc+">>hleftright"+disc+"(100,0,1)", "right/left")
+    tleft.Draw(disc+">>hleftright"+disc+"(100,{},{})".format(dmin, dmax), "right/left")
     hleftright = getattr(ROOT, "hleftright"+disc)
     hleftright.SetLineColor(7)
 
-    tright.Draw(disc+">>hright"+disc+"(100,0,1)")
+    tright.Draw(disc+">>hright"+disc+"(100,{},{})".format(dmin, dmax))
     hright = getattr(ROOT, "hright"+disc)
     hright.SetLineColor(4)
-    tright.Draw(disc+">>hrightleft"+disc+"(100,0,1)", "left/right")
+    tright.Draw(disc+">>hrightleft"+disc+"(100,{},{})".format(dmin, dmax), "left/right")
     hrightleft = getattr(ROOT, "hrightleft"+disc)
     hrightleft.SetLineColor(6)
-    tleft.Draw(disc+">>hmixp"+disc+"(100,0,1)", "(left+right+int)/left")
+    tleft.Draw(disc+">>hmixp"+disc+"(100,{},{})".format(dmin, dmax), "(left+right+int)/left")
     hmixp = getattr(ROOT, "hmixp"+disc)
     hmixp.SetLineColor(ROOT.kGreen+3)
 
-    tSM.Draw(disc+">>hSM"+disc+"(100,0,1)")
+    tSM.Draw(disc+">>hSM"+disc+"(100,{},{})".format(dmin, dmax))
     hSM = getattr(ROOT, "hSM"+disc)
     hSM.SetLineColor(1)
 
@@ -61,6 +72,7 @@ def plot(mreso):
     l.Draw()
 
     exts = "png eps root pdf C"
+    print disc
     for ext in exts.split(): c.SaveAs(disc.replace("_E", "")+mreso+"."+ext)
 
 
@@ -100,7 +112,7 @@ def plot(mreso):
   for ext in exts.split(): c.SaveAs("D_LRint"+mreso+"."+ext)
 
   folder = "1TeV" if mreso == "_1TeV" else "125GeV"
-  subprocess.check_call(["rsync", "-azvI"] + ["D_"+disc+mreso+"."+ext for ext in exts.split() for disc in ("L", "R", "LR", "LRint")] + ["hroskes@lxplus.cern.ch:www/contactterms/"+folder])
+  subprocess.check_call(["rsync", "-azvI"] + [disc.replace("_E", "")+mreso+"."+ext for ext in exts.split() for disc in discs] + ["hroskes@lxplus.cern.ch:www/contactterms/"+folder])
 
 if __name__ == "__main__":
   if sys.argv[1:]:

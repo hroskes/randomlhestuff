@@ -5,6 +5,7 @@ from math import pi, sqrt
 import os
 import sys
 
+import numpy
 import ROOT
 
 from lhefile import LHEFile
@@ -27,6 +28,19 @@ vev = getparameter("vev")
 Lambda_z1 = getparameter("Lambda_z1")
 Lambda_zgs1 = getparameter("Lambda_zgs1")
 
+#[kappaZZ, eZeR, eZeL]^T = matrix * [a1, g1prime2, ghzgs1prime2]^T
+matrix = numpy.matrix(
+  [
+   [1, 2*M_Z**2 / Lambda_z1**2, 0],
+   [0, -gZeR*M_Z**2 / Lambda_z1**2, e*M_Z**2 / Lambda_zgs1**2],
+   [0, -gZeL*M_Z**2 / Lambda_z1**2, e*M_Z**2 / Lambda_zgs1**2],
+  ]
+)
+invertedmatrix = matrix.I
+
+a1forleft, g1prime2forleft, ghzgs1prime2forleft = invertedmatrix*numpy.matrix([[0], [0], [1]]).tolist()
+a1forright, g1prime2forright, ghzgs1prime2forright = invertedmatrix*numpy.matrix([[0], [1], [0]]).tolist()
+
 def lhe2tree(filename):
   newfilename = filename.replace(".lhe", ".root")
   assert os.path.exists(filename)
@@ -41,20 +55,37 @@ def lhe2tree(filename):
     SM = array('d', [0])
     L1 = array('d', [0])
     L1Zg = array('d', [0])
-    L1_contact = array('d', [0])
-    L1Zg_contact = array('d', [0])
+    left_L1L1Zg = array('d', [0])
+    right_L1L1Zg = array('d', [0])
     D_L_E = array('d', [0])
     D_R_E = array('d', [0])
     D_LR_E = array('d', [0])
     D_LRint_E = array('d', [0])
+    costhetastar = array('d', [0])
+    costheta1 = array('d', [0])
+    costheta2 = array('d', [0])
+    phi = array('d', [0])
+    phi1 = array('d', [0])
+    m1 = array('d', [0])
+    m2 = array('d', [0])
+    m4l = array('d', [0])
+
+    t.Branch("costhetastar", costhetastar, "costhetastar/D")
+    t.Branch("costheta1", costheta1, "costheta1/D")
+    t.Branch("costheta2", costheta2, "costheta2/D")
+    t.Branch("phi", phi, "phi/D")
+    t.Branch("phi1", phi1, "phi1/D")
+    t.Branch("m1", m1, "m1/D")
+    t.Branch("m2", m2, "m2/D")
+    t.Branch("m4l", m4l, "m4l/D")
     t.Branch("left", left, "left/D")
     t.Branch("right", right, "right/D")
     t.Branch("SM", SM, "SM/D")
     t.Branch("int", int, "int/D")
     t.Branch("L1", L1, "L1/D")
     t.Branch("L1Zg", L1Zg, "L1Zg/D")
-    t.Branch("L1_contact", L1_contact, "L1_contact/D")
-    t.Branch("L1Zg_contact", L1Zg_contact, "L1Zg_contact/D")
+    t.Branch("left_L1L1Zg", left_L1L1Zg, "left_L1L1Zg/D")
+    t.Branch("right_L1L1Zg", right_L1L1Zg, "right_L1L1Zg/D")
     t.Branch("D_L_E", D_L_E, "D_L_E/D")
     t.Branch("D_R_E", D_R_E, "D_R_E/D")
     t.Branch("D_LR_E", D_LR_E, "D_LR_E/D")
@@ -97,18 +128,12 @@ def lhe2tree(filename):
         L1Zg[0] = event.computeP()
 
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
-        event.ghz1 = 1
-        event.ehz_R_E = -gZeR * vev * M_Z**2 / (2 * Lambda_z1**2)
-        event.ehz_L_E = -gZeL * vev * M_Z**2 / (2 * Lambda_z1**2)
-        event.OnlyVVpr = 1
-        L1_contact[0] = event.computeP()
+        event.ghz1, event.ghz1_prime2, event.ghzgs1_prime2 = a1forleft, g1prime2forleft, ghzgs1prime2forleft
+        left_L1L1Zg[0] = event.computeP()
 
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
-        event.ghz1 = 1
-        event.ehz_R_E = e * vev * M_Z**2 / (2 * Lambda_zgs1**2)
-        event.ehz_L_E = e * vev * M_Z**2 / (2 * Lambda_zgs1**2)
-        event.OnlyVVpr = 1
-        L1Zg_contact[0] = event.computeP()
+        event.ghz1, event.ghz1_prime2, event.ghzgs1_prime2 = a1forright, g1prime2forright, ghzgs1prime2forright
+        right_L1L1Zg[0] = event.computeP()
 
         left[0] /= leftxsec
         right[0] /= rightxsec
@@ -121,6 +146,10 @@ def lhe2tree(filename):
         D_R_E[0] = right[0] / (right[0] + SM[0])
         D_LR_E[0] = left[0] / (left[0] + right[0])
         D_LRint_E[0] = int[0] / (left[0] + right[0])
+
+        m4l[0], m1[0], m2[0], costheta1[0], costheta2[0], phi[0], costhetastar[0], phi1[0] = event.computeDecayAngles()
+
+        if abs(m1[0] - M_Z) > abs(m2[0] - M_Z): m1[0], m2[0] = m2[0], m1[0]
 
         t.Fill()
 
