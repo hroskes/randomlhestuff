@@ -144,8 +144,11 @@ def lhe2tree(filename):
 
         D_L_E[0] = left[0] / (left[0] + SM[0])
         D_R_E[0] = right[0] / (right[0] + SM[0])
-        D_LR_E[0] = left[0] / (left[0] + right[0])
-        D_LRint_E[0] = int[0] / (left[0] + right[0])
+        try:
+            D_LR_E[0] = left[0] / (left[0] + right[0])
+            D_LRint_E[0] = int[0] / (left[0] + right[0])
+        except ZeroDivisionError:
+            D_LR_E[0] = D_LRint_E[0] = 0
 
         m4l[0], m1[0], m2[0], costheta1[0], costheta2[0], phi[0], costhetastar[0], phi1[0] = event.computeDecayAngles()
 
