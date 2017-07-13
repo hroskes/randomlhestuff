@@ -2,22 +2,24 @@
 
 import ROOT, rootoverloads, numpy
 
-f = ROOT.TFile("left.root")
+f = ROOT.TFile("../lhefiles/batch2/left.root")
 tree = f.candTree
 
 def t(i):
   tree.GetEntry(i)
   return tree
 
-M = numpy.matrix([[t(0).left, t(0).right, t(0).int], [t(1).left, t(1).right, t(1).int], [t(2).left, t(2).right, t(2).int]])
-b = numpy.matrix([[t(0).L1], [t(1).L1], [t(2).L1]])
+probs = ["left", "right", "int"]
+
+M = numpy.matrix([[getattr(t(i), prob) for prob in probs] for i, _ in enumerate(probs)])
+b = numpy.matrix([[t(i).L1] for i, _ in enumerate(probs)])
 
 coefs = M.I*b
 for i in range(20):
-  print (numpy.matrix([[t(i).left, t(i).right, t(i).int]])*coefs)[0,0], t(i).L1
+  print (numpy.matrix([[getattr(t(i), prob) for prob in probs]])*coefs)[0,0], t(i).L1
 
 c = ROOT.TCanvas()
-tree.Draw("{}*left + {}*right + {}*int:L1".format(*coefs.A1.tolist()))
+tree.Draw("+".join("{}*{}".format(coef, prob) for coef, prob in zip(numpy.array(coefs).flatten().tolist(), probs)) + ":L1")
 line = ROOT.TLine(0, 0, 1, 1)
 line.SetLineColor(ROOT.kRed)
 line.Draw()
