@@ -31,6 +31,7 @@ def plot(cutid=0):
   tleft.Draw("1>>normmixp", "((left+right+int)/left)"); normmixp = ROOT.normmixp.Integral()
   tleft.Draw("1>>normmixm", "((left+right-int)/left)"); normmixm = ROOT.normmixm.Integral()
   tSM.Draw("1>>normSM"); normSM = ROOT.normSM.Integral()
+  tSM.Draw("1>>normSMleft", "(left/SM)"); normSMleft = ROOT.normSMleft.Integral()
 
   discs = "D_LR", "D_L", "D_R", "D_LRint", "costheta1", "costheta2", "costhetastar", "phi", "phi1", "m1", "m2"
 
@@ -67,6 +68,9 @@ def plot(cutid=0):
     tSM.Draw(disc+">>hSM"+disc+cutid+"(50,{},{})".format(dmin, dmax), cut)
     hSM = getattr(ROOT, "hSM"+disc+cutid)
     hSM.SetLineColor(1)
+    tSM.Draw(disc+">>hSMleft"+disc+cutid+"(50,{},{})".format(dmin, dmax), "(left/SM)*"+cut)
+    hSMleft = getattr(ROOT, "hSMleft"+disc+cutid)
+    hSMleft.SetLineColor(ROOT.kViolet-1)
 
     hstack = ROOT.THStack("hs", "")
     hstack.Add(hSM)
@@ -76,8 +80,9 @@ def plot(cutid=0):
     hstack.Add(hrightleft)
     hstack.Add(hmixp)
     hstack.Add(hmixm)
+#    hstack.Add(hSMleft)
 
-    histsnorms = (hSM, normSM), (hleft, normleft), (hright, normright), (hleftright, normleftright), (hrightleft, normrightleft), (hmixp, normmixp), (hmixm, normmixm)
+    histsnorms = (hSM, normSM), (hleft, normleft), (hright, normright), (hleftright, normleftright), (hrightleft, normrightleft), (hmixp, normmixp), (hmixm, normmixm), (hSMleft, normSMleft)
     for _ in hstack.GetHists(): assert any(_ is hist for hist, norm in histsnorms)
     for hist, norm in histsnorms: hist.Scale(1./norm)
 
@@ -91,6 +96,7 @@ def plot(cutid=0):
     l.AddEntry(hrightleft, "right rwt to left", "l")
     l.AddEntry(hmixp, "f_{L}=f_{R}=0.5 #phi=0", "l")
     l.AddEntry(hmixm, "f_{L}=f_{R}=0.5 #phi=#pi", "l")
+#    l.AddEntry(hSMleft, "SM rwt to left", "l")
 
     hstack.Draw("hist nostack")
     hstack.GetXaxis().SetTitle(disc.replace("D_", "D_{").replace("LR", "L/R") + ("}" if "D_" in disc else ""))
@@ -138,12 +144,26 @@ def plot(cutid=0):
 
   for ext in exts.split(): c.SaveAs(folder+"D_LRint"+"."+ext)
 
-  tright.Draw("m1:m2>>hm1m2right"+cutid+"(50,0,100,50,0,100)", cut, "COLZ")
+  tright.Draw("m1:m2>>hm12right"+cutid+"(50,0,100,50,0,100)", cut, "COLZ")
   for ext in exts.split(): c.SaveAs(folder+"m12_2d/right."+ext)
-  tleft.Draw("m1:m2>>hm1m2left"+cutid+"(50,0,100,50,0,100)", cut, "COLZ")
+  tleft.Draw("m1:m2>>hm12left"+cutid+"(50,0,100,50,0,100)", cut, "COLZ")
   for ext in exts.split(): c.SaveAs(folder+"m12_2d/left."+ext)
-  tSM.Draw("m1:m2>>hm1m2SM"+cutid+"(50,0,100,50,0,100)", cut, "COLZ")
+  tSM.Draw("m1:m2>>hm12SM"+cutid+"(50,0,100,50,0,100)", cut, "COLZ")
   for ext in exts.split(): c.SaveAs(folder+"m12_2d/SM."+ext)
+
+  tright.Draw("costheta1:costheta2>>hcostheta12right"+cutid+"(50,-1,1,50,-1,1)", cut, "COLZ")
+  for ext in exts.split(): c.SaveAs(folder+"costheta12_2d/right."+ext)
+  tleft.Draw("costheta1:costheta2>>hcostheta12left"+cutid+"(50,-1,1,50,-1,1)", cut, "COLZ")
+  for ext in exts.split(): c.SaveAs(folder+"costheta12_2d/left."+ext)
+  tSM.Draw("costheta1:costheta2>>hcostheta12SM"+cutid+"(50,-1,1,50,-1,1)", cut, "COLZ")
+  for ext in exts.split(): c.SaveAs(folder+"costheta12_2d/SM."+ext)
+
+  tright.Draw("m2:phi>>hm2phiright"+cutid+"(10,-{},{},10,0,60)".format(pi, pi), cut, "COLZ")
+  for ext in exts.split(): c.SaveAs(folder+"m2phi_2d/right."+ext)
+  tleft.Draw("m2:phi>>hm2phileft"+cutid+"(10,-{},{},10,0,60)".format(pi, pi), cut, "COLZ")
+  for ext in exts.split(): c.SaveAs(folder+"m2phi_2d/left."+ext)
+  tSM.Draw("m2:phi>>hm2phiSM"+cutid+"(10,-{},{},10,0,60)".format(pi, pi), cut, "COLZ")
+  for ext in exts.split(): c.SaveAs(folder+"m2phi_2d/SM."+ext)
 
 if __name__ == "__main__":
   if sys.argv[1:]:

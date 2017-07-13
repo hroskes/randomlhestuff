@@ -52,6 +52,7 @@ def lhe2tree(filename):
     left = array('d', [0])
     right = array('d', [0])
     int = array('d', [0])
+    int_im = array('d', [0])
     SM = array('d', [0])
     L1 = array('d', [0])
     L1Zg = array('d', [0])
@@ -82,6 +83,7 @@ def lhe2tree(filename):
     t.Branch("right", right, "right/D")
     t.Branch("SM", SM, "SM/D")
     t.Branch("int", int, "int/D")
+    t.Branch("int_im", int_im, "int_im/D")
     t.Branch("L1", L1, "L1/D")
     t.Branch("L1Zg", L1Zg, "L1Zg/D")
     t.Branch("left_L1L1Zg", left_L1L1Zg, "left_L1L1Zg/D")
@@ -94,8 +96,8 @@ def lhe2tree(filename):
     with LHEFile(filename) as lhe:
 
       if lhe.mass == 125:
-        leftxsec = 3.2287305
-        rightxsec = 3.2270333
+        leftxsec = 1.4347981E+01
+        rightxsec = 1.3952140E+01
         SMxsec = 1.4604303E+01
         L1xsec = 9.955957800124091e-08
         L1Zgxsec = 2.5195854694239526e-07
@@ -116,6 +118,10 @@ def lhe2tree(filename):
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
         event.ghzzp1 = event.ezp_R_E = event.ezp_R_M = event.ezp_R_T = event.ezp_L_E = event.ezp_L_M = event.ezp_L_T = 1
         int[0] = event.computeP() - left[0] - right[0]
+        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
+        event.ghzzp1 = event.ezp_R_E = event.ezp_R_M = event.ezp_R_T = 1
+        event.ezp_L_E = event.ezp_L_M = event.ezp_L_T = 1j
+        int_im[0] = event.computeP() - left[0] - right[0]
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
         event.ghz1 = 1
         SM[0] = event.computeP()
@@ -138,6 +144,7 @@ def lhe2tree(filename):
         left[0] /= leftxsec
         right[0] /= rightxsec
         int[0] /= sqrt(leftxsec*rightxsec)
+        int_im[0] /= sqrt(leftxsec*rightxsec)
         SM[0] /= SMxsec
         L1[0] /= L1xsec
         L1Zg[0] /= L1Zgxsec
