@@ -2,23 +2,41 @@
 
 from math import pi
 import ROOT, style, subprocess, sys
+import rootoverloads
 
-def plot(mreso):
+def plot(cutid=0):
 
   c = ROOT.TCanvas()
 
   tleft = ROOT.TChain("candTree")
-  tleft.Add("../JHUGen/JHUGenerator/left"+mreso+".root")
+  tleft.Add("../lhefiles/batch2/left.root")
   tright = ROOT.TChain("candTree")
-  tright.Add("../JHUGen/JHUGenerator/right"+mreso+".root")
+  tright.Add("../lhefiles/batch2/right.root")
   tSM = ROOT.TChain("candTree")
-  tSM.Add("../JHUGen/JHUGenerator/SM"+mreso+".root")
+  tSM.Add("../lhefiles/batch2/SM.root")
 
-  discs = "D_LR_E", "D_L_E", "D_R_E", "D_LRint_E", "costheta1", "costheta2", "costhetastar", "phi", "phi1", "m1", "m2"
+  folder = "~/www/TEST/"
+
+  if int(cutid) == 0: cut = "1"
+  elif int(cutid) == 1: cut = "D_R>=0.85"; folder += "D_R_big/"
+  elif int(cutid) == 2: cut = "D_R<0.85"; folder += "D_R_small/"
+  else: assert False, cutid
+
+  cut = "("+cut+")"
+
+  tleft.Draw("1>>normleft"); normleft = ROOT.normleft.Integral()
+  tleft.Draw("1>>normleftright", "(right/left)"); normleftright = ROOT.normleftright.Integral()
+  tright.Draw("1>>normright"); normright = ROOT.normright.Integral()
+  tright.Draw("1>>normrightleft", "(left/right)"); normrightleft = ROOT.normrightleft.Integral()
+  tleft.Draw("1>>normmixp", "((left+right+int)/left)"); normmixp = ROOT.normmixp.Integral()
+  tleft.Draw("1>>normmixm", "((left+right-int)/left)"); normmixm = ROOT.normmixm.Integral()
+  tSM.Draw("1>>normSM"); normSM = ROOT.normSM.Integral()
+
+  discs = "D_LR", "D_L", "D_R", "D_LRint", "costheta1", "costheta2", "costhetastar", "phi", "phi1", "m1", "m2"
 
   for disc in discs:
 
-    if disc == "D_LRint_E": continue
+    if disc == "D_LRint": continue
 
     if "cos" in disc: dmin, dmax = -1, 1
     elif "phi" in disc: dmin, dmax = -pi, pi
@@ -26,25 +44,28 @@ def plot(mreso):
     elif disc == "m2": dmin, dmax = 0, 100
     else: dmin, dmax = 0, 1
 
-    tleft.Draw(disc+">>hleft"+disc+"(100,{},{})".format(dmin, dmax))
-    hleft = getattr(ROOT, "hleft"+disc)
+    tleft.Draw(disc+">>hleft"+disc+cutid+"(50,{},{})".format(dmin, dmax), cut)
+    hleft = getattr(ROOT, "hleft"+disc+cutid)
     hleft.SetLineColor(2)
-    tleft.Draw(disc+">>hleftright"+disc+"(100,{},{})".format(dmin, dmax), "right/left")
-    hleftright = getattr(ROOT, "hleftright"+disc)
+    tleft.Draw(disc+">>hleftright"+disc+cutid+"(50,{},{})".format(dmin, dmax), "(right/left)*"+cut)
+    hleftright = getattr(ROOT, "hleftright"+disc+cutid)
     hleftright.SetLineColor(7)
 
-    tright.Draw(disc+">>hright"+disc+"(100,{},{})".format(dmin, dmax))
-    hright = getattr(ROOT, "hright"+disc)
+    tright.Draw(disc+">>hright"+disc+cutid+"(50,{},{})".format(dmin, dmax), cut)
+    hright = getattr(ROOT, "hright"+disc+cutid)
     hright.SetLineColor(4)
-    tright.Draw(disc+">>hrightleft"+disc+"(100,{},{})".format(dmin, dmax), "left/right")
-    hrightleft = getattr(ROOT, "hrightleft"+disc)
+    tright.Draw(disc+">>hrightleft"+disc+cutid+"(50,{},{})".format(dmin, dmax), "(left/right)*"+cut)
+    hrightleft = getattr(ROOT, "hrightleft"+disc+cutid)
     hrightleft.SetLineColor(6)
-    tleft.Draw(disc+">>hmixp"+disc+"(100,{},{})".format(dmin, dmax), "(left+right+int)/left")
-    hmixp = getattr(ROOT, "hmixp"+disc)
+    tleft.Draw(disc+">>hmixp"+disc+cutid+"(50,{},{})".format(dmin, dmax), "((left+right+int)/left)*"+cut)
+    hmixp = getattr(ROOT, "hmixp"+disc+cutid)
     hmixp.SetLineColor(ROOT.kGreen+3)
+    tleft.Draw(disc+">>hmixm"+disc+cutid+"(50,{},{})".format(dmin, dmax), "((left+right-int)/left)*"+cut)
+    hmixm = getattr(ROOT, "hmixm"+disc+cutid)
+    hmixm.SetLineColor(3)
 
-    tSM.Draw(disc+">>hSM"+disc+"(100,{},{})".format(dmin, dmax))
-    hSM = getattr(ROOT, "hSM"+disc)
+    tSM.Draw(disc+">>hSM"+disc+cutid+"(50,{},{})".format(dmin, dmax), cut)
+    hSM = getattr(ROOT, "hSM"+disc+cutid)
     hSM.SetLineColor(1)
 
     hstack = ROOT.THStack("hs", "")
@@ -54,8 +75,11 @@ def plot(mreso):
     hstack.Add(hleftright)
     hstack.Add(hrightleft)
     hstack.Add(hmixp)
+    hstack.Add(hmixm)
 
-    for _ in hstack.GetHists(): _.Scale(1/_.Integral())
+    histsnorms = (hSM, normSM), (hleft, normleft), (hright, normright), (hleftright, normleftright), (hrightleft, normrightleft), (hmixp, normmixp), (hmixm, normmixm)
+    for _ in hstack.GetHists(): assert any(_ is hist for hist, norm in histsnorms)
+    for hist, norm in histsnorms: hist.Scale(1./norm)
 
     l = ROOT.TLegend(.6, .6, .9, .9)
     l.SetFillStyle(0)
@@ -66,28 +90,29 @@ def plot(mreso):
     l.AddEntry(hleftright, "left rwt to right", "l")
     l.AddEntry(hrightleft, "right rwt to left", "l")
     l.AddEntry(hmixp, "f_{L}=f_{R}=0.5 #phi=0", "l")
+    l.AddEntry(hmixm, "f_{L}=f_{R}=0.5 #phi=#pi", "l")
 
     hstack.Draw("hist nostack")
-    hstack.GetXaxis().SetTitle(disc.replace("_E", "}").replace("D_", "D_{").replace("LR", "L/R"))
+    hstack.GetXaxis().SetTitle(disc.replace("D_", "D_{").replace("LR", "L/R") + ("}" if "D_" in disc else ""))
     l.Draw()
 
     exts = "png eps root pdf C"
     print disc
-    for ext in exts.split(): c.SaveAs(disc.replace("_E", "")+mreso+"."+ext)
+    for ext in exts.split(): c.SaveAs(folder+disc+"."+ext)
 
 
-  tleft.Draw("D_LRint_E>>hleftint(100,-1.5e-7,1.5e-7)")
-  hleftint = ROOT.hleftint
+  tleft.Draw("D_LRint>>hleftint"+cutid+"(50,-1,1)", cut)
+  hleftint = getattr(ROOT, "hleftint"+cutid)
   hleftint.SetLineColor(2)
-  tright.Draw("D_LRint_E>>hrightint(100,-1.5e-7,1.5e-7)")
-  hrightint = ROOT.hrightint
+  tright.Draw("D_LRint>>hrightint"+cutid+"(50,-1,1)", cut)
+  hrightint = getattr(ROOT, "hrightint"+cutid)
   hrightint.SetLineColor(4)
-  tleft.Draw("D_LRint_E>>hmixpint(100,-1.5e-7,1.5e-7)", "(left+right+int)/left")
-  tleft.Draw("D_LRint_E>>hmixmint(100,-1.5e-7,1.5e-7)", "(left+right-int)/left")
-  hmixpint = ROOT.hmixpint
+  tleft.Draw("D_LRint>>hmixpint"+cutid+"(50,-1,1)", "((left+right+int)/left)*"+cut)
+  tleft.Draw("D_LRint>>hmixmint"+cutid+"(50,-1,1)", "((left+right-int)/left)*"+cut)
+  hmixpint = getattr(ROOT, "hmixpint"+cutid)
   hmixpint.SetLineColor(ROOT.kGreen+3)
-  hmixmint = ROOT.hmixmint
-  hmixmint.SetLineColor(1)
+  hmixmint = getattr(ROOT, "hmixmint"+cutid)
+  hmixmint.SetLineColor(3)
 
   hstack = ROOT.THStack("hs2", "")
   hstack.Add(hleftint)
@@ -95,7 +120,9 @@ def plot(mreso):
   hstack.Add(hmixpint)
   hstack.Add(hmixmint)
 
-  for _ in hstack.GetHists(): _.Scale(1/_.Integral())
+  histsnorms = (hleftint, normleft), (hrightint, normright), (hmixpint, normmixp), (hmixmint, normmixm)
+  for _ in hstack.GetHists(): assert any(_ is hist for hist, norm in histsnorms)
+  for hist, norm in histsnorms: hist.Scale(1./norm)
 
   l = ROOT.TLegend(.6, .6, .9, .9)
   l.SetFillStyle(0)
@@ -109,13 +136,19 @@ def plot(mreso):
   hstack.GetXaxis().SetTitle("D_{int}^{L/R}")
   l.Draw()
 
-  for ext in exts.split(): c.SaveAs("D_LRint"+mreso+"."+ext)
+  for ext in exts.split(): c.SaveAs(folder+"D_LRint"+"."+ext)
 
-  folder = "1TeV" if mreso == "_1TeV" else "125GeV"
-  subprocess.check_call(["rsync", "-azvI"] + [disc.replace("_E", "")+mreso+"."+ext for ext in exts.split() for disc in discs] + ["hroskes@lxplus.cern.ch:www/contactterms/"+folder])
+  tright.Draw("m1:m2>>hm1m2right"+cutid+"(50,0,100,50,0,100)", cut, "COLZ")
+  for ext in exts.split(): c.SaveAs(folder+"m12_2d/right."+ext)
+  tleft.Draw("m1:m2>>hm1m2left"+cutid+"(50,0,100,50,0,100)", cut, "COLZ")
+  for ext in exts.split(): c.SaveAs(folder+"m12_2d/left."+ext)
+  tSM.Draw("m1:m2>>hm1m2SM"+cutid+"(50,0,100,50,0,100)", cut, "COLZ")
+  for ext in exts.split(): c.SaveAs(folder+"m12_2d/SM."+ext)
 
 if __name__ == "__main__":
   if sys.argv[1:]:
     plot(*sys.argv[1:])
   else:
-    plot("")
+    plot("0")
+    plot("1")
+    plot("2")

@@ -1,10 +1,27 @@
 #!/usr/bin/env python
 
 from math import sqrt
+from functools import wraps
+dsqrt = sqrt
 
 import os
 import re
 
+def cache(function):
+    cache = {}
+    @wraps(function)
+    def newfunction(*args, **kwargs):
+        try:
+            return cache[args, tuple(sorted(kwargs.iteritems()))]
+        except TypeError:
+            print args, tuple(sorted(kwargs.iteritems()))
+            raise
+        except KeyError:
+            cache[args, tuple(sorted(kwargs.iteritems()))] = function(*args, **kwargs)
+            return newfunction(*args, **kwargs)
+    return newfunction
+
+@cache
 def getparameter(name):
   filename = os.path.join(os.path.dirname(__file__), "..", "JHUGen", "JHUGenerator", "mod_Parameters.F90")
   regex = (
@@ -25,7 +42,7 @@ def getparameter(name):
       if match:
         r = match.group(1)
         r = r.replace("_dp", "")
-        r = re.sub(r"\b([0-9.]*)d", r"\1e", r)
+        r = re.sub(r"\b([0-9.]+)d", r"\1e", r)
         rr = r
         gev = 1
         while True:
