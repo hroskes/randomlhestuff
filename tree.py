@@ -57,10 +57,10 @@ def lhe2tree(filename):
     L1Zg = array('d', [0])
     left_L1L1Zg = array('d', [0])
     right_L1L1Zg = array('d', [0])
-    D_L_E = array('d', [0])
-    D_R_E = array('d', [0])
-    D_LR_E = array('d', [0])
-    D_LRint_E = array('d', [0])
+    D_L = array('d', [0])
+    D_R = array('d', [0])
+    D_LR = array('d', [0])
+    D_LRint = array('d', [0])
     costhetastar = array('d', [0])
     costheta1 = array('d', [0])
     costheta2 = array('d', [0])
@@ -86,10 +86,10 @@ def lhe2tree(filename):
     t.Branch("L1Zg", L1Zg, "L1Zg/D")
     t.Branch("left_L1L1Zg", left_L1L1Zg, "left_L1L1Zg/D")
     t.Branch("right_L1L1Zg", right_L1L1Zg, "right_L1L1Zg/D")
-    t.Branch("D_L_E", D_L_E, "D_L_E/D")
-    t.Branch("D_R_E", D_R_E, "D_R_E/D")
-    t.Branch("D_LR_E", D_LR_E, "D_LR_E/D")
-    t.Branch("D_LRint_E", D_LRint_E, "D_LRint_E/D")
+    t.Branch("D_L", D_L, "D_L/D")
+    t.Branch("D_R", D_R, "D_R/D")
+    t.Branch("D_LR", D_LR, "D_LR/D")
+    t.Branch("D_LRint", D_LRint, "D_LRint/D")
 
     with LHEFile(filename) as lhe:
 
@@ -108,13 +108,13 @@ def lhe2tree(filename):
       print filename
       for i, event in enumerate(lhe, start=1):
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
-        event.ghz1 = event.ehz_L_E = event.OnlyVVpr = 1
+        event.ghzzp1 = event.ezp_L_E = event.ezp_L_M = event.ezp_L_T = 1
         left[0] = event.computeP()
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
-        event.ghz1 = event.ehz_R_E = event.OnlyVVpr = 1
+        event.ghzzp1 = event.ezp_R_E = event.ezp_R_M = event.ezp_R_T = 1
         right[0] = event.computeP()
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
-        event.ghz1 = event.ehz_R_E = event.ehz_L_E = event.OnlyVVpr = 1
+        event.ghzzp1 = event.ezp_R_E = event.ezp_R_M = event.ezp_R_T = event.ezp_L_E = event.ezp_L_M = event.ezp_L_T = 1
         int[0] = event.computeP() - left[0] - right[0]
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
         event.ghz1 = 1
@@ -142,13 +142,13 @@ def lhe2tree(filename):
         L1[0] /= L1xsec
         L1Zg[0] /= L1Zgxsec
 
-        D_L_E[0] = left[0] / (left[0] + SM[0])
-        D_R_E[0] = right[0] / (right[0] + SM[0])
+        D_L[0] = left[0] / (left[0] + SM[0])
+        D_R[0] = right[0] / (right[0] + SM[0])
         try:
-            D_LR_E[0] = left[0] / (left[0] + right[0])
-            D_LRint_E[0] = int[0] / (left[0] + right[0])
+            D_LR[0] = left[0] / (left[0] + right[0])
+            D_LRint[0] = int[0] / (left[0] + right[0])
         except ZeroDivisionError:
-            D_LR_E[0] = D_LRint_E[0] = 0
+            D_LR[0] = D_LRint[0] = 0
 
         m4l[0], m1[0], m2[0], costheta1[0], costheta2[0], phi[0], costhetastar[0], phi1[0] = event.computeDecayAngles()
 
