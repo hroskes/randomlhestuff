@@ -53,6 +53,7 @@ def lhe2tree(filename):
     right = array('d', [0])
     int = array('d', [0])
     SM = array('d', [0])
+    SM_leftright = array('d', [0])
     L1 = array('d', [0])
     L1Zg = array('d', [0])
     left_L1L1Zg = array('d', [0])
@@ -81,6 +82,7 @@ def lhe2tree(filename):
     t.Branch("left", left, "left/D")
     t.Branch("right", right, "right/D")
     t.Branch("SM", SM, "SM/D")
+    t.Branch("SM_leftright", SM_leftright, "SM_leftright/D")
     t.Branch("int", int, "int/D")
     t.Branch("L1", L1, "L1/D")
     t.Branch("L1Zg", L1Zg, "L1Zg/D")
@@ -94,8 +96,8 @@ def lhe2tree(filename):
     with LHEFile(filename) as lhe:
 
       if lhe.mass == 125:
-        leftxsec = 3.2287305
-        rightxsec = 3.2270333
+        leftxsec = 1.4347981E+01
+        rightxsec = 1.3952140E+01
         SMxsec = 1.4604303E+01
         L1xsec = 9.955957800124091e-08
         L1Zgxsec = 2.5195854694239526e-07
@@ -109,16 +111,38 @@ def lhe2tree(filename):
       for i, event in enumerate(lhe, start=1):
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
         event.ghzzp1 = event.ezp_L_E = event.ezp_L_M = event.ezp_L_T = 1
-        left[0] = event.computeP()
+        #left[0] = event.computeP()
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
         event.ghzzp1 = event.ezp_R_E = event.ezp_R_M = event.ezp_R_T = 1
-        right[0] = event.computeP()
+        #right[0] = event.computeP()
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
         event.ghzzp1 = event.ezp_R_E = event.ezp_R_M = event.ezp_R_T = event.ezp_L_E = event.ezp_L_M = event.ezp_L_T = 1
-        int[0] = event.computeP() - left[0] - right[0]
+        #int[0] = event.computeP() - left[0] - right[0]
+
+        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.JJVBF)
+        print "This is 0:", event.computeProdP()
+
+
+        print "============"
+        print "SM"
+        print "============"
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
         event.ghz1 = 1
         SM[0] = event.computeP()
+        print SM[0]
+
+        print "============"
+        print "contact"
+        print "============"
+        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
+        event.ghzzp1 = 1
+        event.ezp_L_E = event.ezp_L_M = event.ezp_L_T = getparameter("aL_lep")
+        event.ezp_R_E = event.ezp_R_M = event.ezp_R_T = getparameter("aR_lep")
+        event.UseVprime = 1
+        event.M_Vprime = getparameter("M_Z")
+        event.Ga_Vprime = getparameter("Ga_Z")
+        SM_leftright[0] = event.computeP()
+        print SM_leftright[0]
 
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
         event.ghz1_prime2 = 1
@@ -156,6 +180,7 @@ def lhe2tree(filename):
 
         t.Fill()
 
+        break
         if i % 1000 == 0:
           print "processed", i, "events"
   except:
