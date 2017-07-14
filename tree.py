@@ -71,6 +71,15 @@ def lhe2tree(filename):
     m2 = array('d', [0])
     m4l = array('d', [0])
 
+    leftE = array('d', [0])
+    leftT = array('d', [0])
+    rightE = array('d', [0])
+    rightT = array('d', [0])
+    leftrightE = array('d', [0])
+    leftrightT = array('d', [0])
+    leftTrightE = array('d', [0])
+    leftErightT = array('d', [0])
+
     t.Branch("costhetastar", costhetastar, "costhetastar/D")
     t.Branch("costheta1", costheta1, "costheta1/D")
     t.Branch("costheta2", costheta2, "costheta2/D")
@@ -93,6 +102,15 @@ def lhe2tree(filename):
     t.Branch("D_LR", D_LR, "D_LR/D")
     t.Branch("D_LRint", D_LRint, "D_LRint/D")
 
+    t.Branch("leftE", leftE, "leftE/D")
+    t.Branch("leftT", leftT, "leftT/D")
+    t.Branch("rightE", rightE, "rightE/D")
+    t.Branch("rightT", rightT, "rightT/D")
+    t.Branch("leftrightE", leftrightE, "leftrightE/D")
+    t.Branch("leftrightT", leftrightT, "leftrightT/D")
+    t.Branch("leftTrightE", leftTrightE, "leftTrightE/D")
+    t.Branch("leftErightT", leftErightT, "leftErightT/D")
+
     with LHEFile(filename) as lhe:
 
       if lhe.mass == 125:
@@ -113,8 +131,36 @@ def lhe2tree(filename):
         event.ghzzp1 = event.ezp_L_E = event.ezp_L_M = event.ezp_L_T = 1
         left[0] = event.computeP()
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
+        event.ghzzp1 = event.ezp_L_E = event.ezp_L_M = 1
+        leftE[0] = event.computeP()
+        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
+        event.ghzzp1 = event.ezp_L_T = 1
+        leftT[0] = event.computeP()
+
+        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
         event.ghzzp1 = event.ezp_R_E = event.ezp_R_M = event.ezp_R_T = 1
         right[0] = event.computeP()
+        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
+        event.ghzzp1 = event.ezp_R_E = event.ezp_R_M = 1
+        rightE[0] = event.computeP()
+        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
+        event.ghzzp1 = event.ezp_R_T = 1
+        rightT[0] = event.computeP()
+
+        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
+        event.ghzzp1 = event.ezp_L_E = event.ezp_L_M = event.ezp_R_T = 1
+        leftErightT[0] = event.computeP()
+        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
+        event.ghzzp1 = event.ezp_R_E = event.ezp_R_M = event.ezp_L_T = 1
+        leftTrightE[0] = event.computeP()
+
+        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
+        event.ghzzp1 = event.ezp_L_E = event.ezp_L_M = event.ezp_R_E = event.ezp_R_M = 1
+        leftrightE[0] = event.computeP()
+        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
+        event.ghzzp1 = event.ezp_L_T = event.ezp_R_T = 1
+        leftrightT[0] = event.computeP()
+
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
         event.ghzzp1 = event.ezp_R_E = event.ezp_R_M = event.ezp_R_T = event.ezp_L_E = event.ezp_L_M = event.ezp_L_T = 1
         int[0] = event.computeP() - left[0] - right[0]

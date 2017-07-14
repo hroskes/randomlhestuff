@@ -23,4 +23,4 @@ tree.Draw("+".join("{}*{}".format(coef, prob) for coef, prob in zip(numpy.array(
 line = ROOT.TLine(0, 0, 1, 1)
 line.SetLineColor(ROOT.kRed)
 line.Draw()
-c.SaveAs("~/www/TEST/test.png")
+c.SaveAs("~/www/contactterms/newimplementation/flavoruniversal/L1linearcombination.png")

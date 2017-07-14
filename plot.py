@@ -15,11 +15,9 @@ def plot(cutid=0):
   tSM = ROOT.TChain("candTree")
   tSM.Add("../lhefiles/batch2/SM.root")
 
-  folder = "~/www/TEST/"
+  folder = "~/www/contactterms/newimplementation/flavoruniversal/"
 
   if int(cutid) == 0: cut = "1"
-  elif int(cutid) == 1: cut = "D_R>=0.85"; folder += "D_R_big/"
-  elif int(cutid) == 2: cut = "D_R<0.85"; folder += "D_R_small/"
   else: assert False, cutid
 
   cut = "("+cut+")"
@@ -144,6 +142,7 @@ def plot(cutid=0):
 
   for ext in exts.split(): c.SaveAs(folder+"D_LRint"+"."+ext)
 
+  """
   tright.Draw("m1:m2>>hm12right"+cutid+"(50,0,100,50,0,100)", cut, "COLZ")
   for ext in exts.split(): c.SaveAs(folder+"m12_2d/right."+ext)
   tleft.Draw("m1:m2>>hm12left"+cutid+"(50,0,100,50,0,100)", cut, "COLZ")
@@ -164,11 +163,10 @@ def plot(cutid=0):
   for ext in exts.split(): c.SaveAs(folder+"m2phi_2d/left."+ext)
   tSM.Draw("m2:phi>>hm2phiSM"+cutid+"(10,-{},{},10,0,60)".format(pi, pi), cut, "COLZ")
   for ext in exts.split(): c.SaveAs(folder+"m2phi_2d/SM."+ext)
+  """
 
 if __name__ == "__main__":
   if sys.argv[1:]:
     plot(*sys.argv[1:])
   else:
     plot("0")
-    plot("1")
-    plot("2")
