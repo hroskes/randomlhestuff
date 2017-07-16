@@ -41,6 +41,11 @@ invertedmatrix = matrix.I
 a1forleft, g1prime2forleft, ghzgs1prime2forleft = invertedmatrix*numpy.matrix([[0], [0], [1]]).tolist()
 a1forright, g1prime2forright, ghzgs1prime2forright = invertedmatrix*numpy.matrix([[0], [1], [0]]).tolist()
 
+def Branch(t, name):
+    a = array('d', [0])
+    t.Branch(name, a, name+"/D")
+    return a
+
 def lhe2tree(filename):
   newfilename = filename.replace(".lhe", ".root")
   assert os.path.exists(filename)
@@ -49,67 +54,31 @@ def lhe2tree(filename):
   t = ROOT.TTree("candTree", "")
   bad = False
   try:
-    left = array('d', [0])
-    right = array('d', [0])
-    int = array('d', [0])
-    int_im = array('d', [0])
-    SM = array('d', [0])
-    L1 = array('d', [0])
-    L1Zg = array('d', [0])
-    left_L1L1Zg = array('d', [0])
-    right_L1L1Zg = array('d', [0])
-    D_L = array('d', [0])
-    D_R = array('d', [0])
-    D_LR = array('d', [0])
-    D_LRint = array('d', [0])
-    costhetastar = array('d', [0])
-    costheta1 = array('d', [0])
-    costheta2 = array('d', [0])
-    phi = array('d', [0])
-    phi1 = array('d', [0])
-    m1 = array('d', [0])
-    m2 = array('d', [0])
-    m4l = array('d', [0])
+    costhetastar = Branch(t, "costhetastar")
+    costheta1 = Branch(t, "costheta1")
+    costheta2 = Branch(t, "costheta2")
+    phi = Branch(t, "phi")
+    phi1 = Branch(t, "phi1")
+    m1 = Branch(t, "m1")
+    m2 = Branch(t, "m2")
+    m4l = Branch(t, "m4l")
 
-    leftE = array('d', [0])
-    leftT = array('d', [0])
-    rightE = array('d', [0])
-    rightT = array('d', [0])
-    leftrightE = array('d', [0])
-    leftrightT = array('d', [0])
-    leftTrightE = array('d', [0])
-    leftErightT = array('d', [0])
+    left = Branch(t, "left")
+    right = Branch(t, "right")
+    SM = Branch(t, "SM")
+    LR = Branch(t, "LR")
+    LR_im = Branch(t, "LR_im")
+    SML = Branch(t, "SML")
+    SML_im = Branch(t, "SML_im")
+    SMR = Branch(t, "SMR")
+    SMR_im = Branch(t, "SMR_im")
+    L1 = Branch(t, "L1")
+    L1Zg = Branch(t, "L1Zg")
 
-    t.Branch("costhetastar", costhetastar, "costhetastar/D")
-    t.Branch("costheta1", costheta1, "costheta1/D")
-    t.Branch("costheta2", costheta2, "costheta2/D")
-    t.Branch("phi", phi, "phi/D")
-    t.Branch("phi1", phi1, "phi1/D")
-    t.Branch("m1", m1, "m1/D")
-    t.Branch("m2", m2, "m2/D")
-    t.Branch("m4l", m4l, "m4l/D")
-    t.Branch("left", left, "left/D")
-    t.Branch("right", right, "right/D")
-    t.Branch("SM", SM, "SM/D")
-    t.Branch("int", int, "int/D")
-    t.Branch("int_im", int_im, "int_im/D")
-    t.Branch("L1", L1, "L1/D")
-    t.Branch("L1Zg", L1Zg, "L1Zg/D")
-    t.Branch("left_L1L1Zg", left_L1L1Zg, "left_L1L1Zg/D")
-    t.Branch("right_L1L1Zg", right_L1L1Zg, "right_L1L1Zg/D")
-    t.Branch("D_L", D_L, "D_L/D")
-    t.Branch("D_R", D_R, "D_R/D")
-    t.Branch("D_LR", D_LR, "D_LR/D")
-    t.Branch("D_LRint", D_LRint, "D_LRint/D")
-
-    t.Branch("leftE", leftE, "leftE/D")
-    t.Branch("leftT", leftT, "leftT/D")
-    t.Branch("rightE", rightE, "rightE/D")
-    t.Branch("rightT", rightT, "rightT/D")
-    t.Branch("leftrightE", leftrightE, "leftrightE/D")
-    t.Branch("leftrightT", leftrightT, "leftrightT/D")
-    t.Branch("leftTrightE", leftTrightE, "leftTrightE/D")
-    t.Branch("leftErightT", leftErightT, "leftErightT/D")
+    D_L = Branch(t, "D_L")
+    D_R = Branch(t, "D_R")
+    D_LR = Branch(t, "D_LR")
+    D_LRint = Branch(t, "D_LRint")
 
     with LHEFile(filename) as lhe:
 
@@ -130,47 +99,38 @@ def lhe2tree(filename):
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
         event.ghzzp1 = event.ezp_L_E = event.ezp_L_M = event.ezp_L_T = 1
         left[0] = event.computeP()
-        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
-        event.ghzzp1 = event.ezp_L_E = event.ezp_L_M = 1
-        leftE[0] = event.computeP()
-        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
-        event.ghzzp1 = event.ezp_L_T = 1
-        leftT[0] = event.computeP()
 
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
         event.ghzzp1 = event.ezp_R_E = event.ezp_R_M = event.ezp_R_T = 1
         right[0] = event.computeP()
-        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
-        event.ghzzp1 = event.ezp_R_E = event.ezp_R_M = 1
-        rightE[0] = event.computeP()
-        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
-        event.ghzzp1 = event.ezp_R_T = 1
-        rightT[0] = event.computeP()
-
-        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
-        event.ghzzp1 = event.ezp_L_E = event.ezp_L_M = event.ezp_R_T = 1
-        leftErightT[0] = event.computeP()
-        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
-        event.ghzzp1 = event.ezp_R_E = event.ezp_R_M = event.ezp_L_T = 1
-        leftTrightE[0] = event.computeP()
-
-        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
-        event.ghzzp1 = event.ezp_L_E = event.ezp_L_M = event.ezp_R_E = event.ezp_R_M = 1
-        leftrightE[0] = event.computeP()
-        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
-        event.ghzzp1 = event.ezp_L_T = event.ezp_R_T = 1
-        leftrightT[0] = event.computeP()
 
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
         event.ghzzp1 = event.ezp_R_E = event.ezp_R_M = event.ezp_R_T = event.ezp_L_E = event.ezp_L_M = event.ezp_L_T = 1
-        int[0] = event.computeP() - left[0] - right[0]
+        LR[0] = event.computeP() - left[0] - right[0]
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
         event.ghzzp1 = event.ezp_R_E = event.ezp_R_M = event.ezp_R_T = 1
         event.ezp_L_E = event.ezp_L_M = event.ezp_L_T = 1j
-        int_im[0] = event.computeP() - left[0] - right[0]
+        LR_im[0] = event.computeP() - left[0] - right[0]
+
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
         event.ghz1 = 1
         SM[0] = event.computeP()
+
+        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
+        event.ghz1 = event.ghzzp1 = event.ezp_L_E = event.ezp_L_M = event.ezp_L_T = 1
+        SML[0] = event.computeP() - SM[0] - left[0]
+        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
+        event.ghz1 = event.ezp_L_E = event.ezp_L_M = event.ezp_L_T = 1
+        event.ghzzp1 = 1j
+        SML_im[0] = event.computeP() - SM[0] - left[0]
+
+        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
+        event.ghz1 = event.ghzzp1 = event.ezp_R_E = event.ezp_R_M = event.ezp_R_T = 1
+        SMR[0] = event.computeP() - SM[0] - right[0]
+        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
+        event.ghz1 = event.ezp_R_E = event.ezp_R_M = event.ezp_R_T = 1
+        event.ghzzp1 = 1j
+        SMR_im[0] = event.computeP() - SM[0] - right[0]
 
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
         event.ghz1_prime2 = 1
@@ -179,29 +139,13 @@ def lhe2tree(filename):
         event.ghzgs1_prime2 = 1
         L1Zg[0] = event.computeP()
 
-        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
-        event.ghz1, event.ghz1_prime2, event.ghzgs1_prime2 = a1forleft, g1prime2forleft, ghzgs1prime2forleft
-        left_L1L1Zg[0] = event.computeP()
-
-        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
-        event.ghz1, event.ghz1_prime2, event.ghzgs1_prime2 = a1forright, g1prime2forright, ghzgs1prime2forright
-        right_L1L1Zg[0] = event.computeP()
-
-        left[0] /= leftxsec
-        right[0] /= rightxsec
-        int[0] /= sqrt(leftxsec*rightxsec)
-        int_im[0] /= sqrt(leftxsec*rightxsec)
-        SM[0] /= SMxsec
-        L1[0] /= L1xsec
-        L1Zg[0] /= L1Zgxsec
-
-        D_L[0] = left[0] / (left[0] + SM[0])
-        D_R[0] = right[0] / (right[0] + SM[0])
+        D_L[0] = left[0]/leftxsec / (left[0]/leftxsec + SM[0]/SMxsec)
+        D_R[0] = right[0]/rightxsec / (right[0]/rightxsec + SM[0]/SMxsec)
         try:
-            D_LR[0] = left[0] / (left[0] + right[0])
-            D_LRint[0] = int[0] / (left[0] + right[0])
+            D_LR[0] = left[0]/leftxsec / (left[0]/leftxsec + right[0]/rightxsec)
+            D_LRint[0] = LR[0]/sqrt(leftxsec*rightxsec) / (left[0]/leftxsec + right[0]/rightxsec)
         except ZeroDivisionError:
-            D_LR[0] = D_LRint[0] = 0
+            D_LR[0] = D_LRLR[0] = 0
 
         m4l[0], m1[0], m2[0], costheta1[0], costheta2[0], phi[0], costhetastar[0], phi1[0] = event.computeDecayAngles()
 
