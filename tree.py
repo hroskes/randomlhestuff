@@ -80,6 +80,10 @@ def lhe2tree(filename):
     D_LR = Branch(t, "D_LR")
     D_LRint = Branch(t, "D_LRint")
 
+    fa1fL1fL1Zg0p33 = Branch(t, "fa1fL1fL1Zg0p33")
+    fa1fL1fL1Zg0p33_positive = Branch(t, "fa1fL1fL1Zg0p33_positive")
+    fa1fL1fL1Zg0p33_negative = Branch(t, "fa1fL1fL1Zg0p33_negative")
+
     with LHEFile(filename) as lhe:
 
       if lhe.mass == 125:
@@ -138,6 +142,28 @@ def lhe2tree(filename):
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
         event.ghzgs1_prime2 = 1
         L1Zg[0] = event.computeP()
+
+        ghz1_prime2_mix = -12110.20
+        ghzgs1_prime2_mix = -7613.351302119843
+        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
+        event.ghz1 = 1
+        event.ghz1_prime2 = ghz1_prime2_mix
+        event.ghzgs1_prime2 = ghzgs1_prime2_mix
+        fa1fL1fL1Zg0p33[0] = event.computeP()
+
+        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
+        event.ghz1 = 1 + M_Z**2 * ghz1_prime2_mix
+        event.ghzzp1 = M_Z**2
+        event.ezp_L_E = ezp_L_M = ezp_L_T = gZeL * ghz1_prime2_mix + e * ghzgs1_prime2_mix
+        event.ezp_R_E = ezp_R_M = ezp_R_T = gZeR * ghz1_prime2_mix + e * ghzgs1_prime2_mix
+        fa1fL1fL1Zg0p33_positive[0] = event.computeP()
+
+        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
+        event.ghz1 = 1 + M_Z**2 * ghz1_prime2_mix
+        event.ghzzp1 = M_Z**2
+        event.ezp_L_E = ezp_L_M = ezp_L_T = gZeL * ghz1_prime2_mix - e * ghzgs1_prime2_mix
+        event.ezp_R_E = ezp_R_M = ezp_R_T = gZeR * ghz1_prime2_mix - e * ghzgs1_prime2_mix
+        fa1fL1fL1Zg0p33_negative[0] = event.computeP()
 
         D_L[0] = left[0]/leftxsec / (left[0]/leftxsec + SM[0]/SMxsec)
         D_R[0] = right[0]/rightxsec / (right[0]/rightxsec + SM[0]/SMxsec)
