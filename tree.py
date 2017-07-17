@@ -12,28 +12,21 @@ from lhefile import LHEFile
 from mela import TVar
 from parameters import getparameter
 
-#working from griffiths 2nd edition page 331-332
-#and andrei's email "more on PO"
-e = 1  #overall factor doesn't matter until we want interference between SM and contact terms
-ge = e*sqrt(4*pi)
-sinthetaW = sqrt(getparameter("xw"))
-costhetaW = sqrt(1-sinthetaW**2)
-gZ = ge / (sinthetaW*costhetaW)
-cVe = -.5 + 2*sinthetaW**2
-cAe = -.5
-gZeL = gZ*(cVe+cAe)
-gZeR = gZ*(cVe-cAe)
+aL = getparameter("aL_lep")
+aR = getparameter("aR_lep")
+e = getparameter("cL_lep")
+assert e == getparameter("cR_lep"), e-getparameter("cR_lep")
 M_Z = getparameter("M_Z")
 vev = getparameter("vev")
-Lambda_z1 = getparameter("Lambda_z1")
-Lambda_zgs1 = getparameter("Lambda_zgs1")
+Lz1 = getparameter("Lambda_z1")
+Lzg1 = getparameter("Lambda_zgs1")
 
 #[kappaZZ, eZeR, eZeL]^T = matrix * [a1, g1prime2, ghzgs1prime2]^T
 matrix = numpy.matrix(
   [
-   [1, 2*M_Z**2 / Lambda_z1**2, 0],
-   [0, -gZeR*M_Z**2 / Lambda_z1**2, e*M_Z**2 / Lambda_zgs1**2],
-   [0, -gZeL*M_Z**2 / Lambda_z1**2, e*M_Z**2 / Lambda_zgs1**2],
+   [1, 2*M_Z**2 / Lz1**2, 0],
+   [0, -aR*M_Z**2 / Lz1**2, e*M_Z**2 / Lzg1**2],
+   [0, -aL*M_Z**2 / Lz1**2, e*M_Z**2 / Lzg1**2],
   ]
 )
 invertedmatrix = matrix.I
@@ -73,7 +66,11 @@ def lhe2tree(filename):
     SMR = Branch(t, "SMR")
     SMR_im = Branch(t, "SMR_im")
     L1 = Branch(t, "L1")
+    L1_contact = Branch(t, "L1_contact")
     L1Zg = Branch(t, "L1Zg")
+    L1Zg_contact = Branch(t, "L1Zg_contact")
+    fL10p5 = Branch(t, "fL10p5")
+    fL10p5_contact = Branch(t, "fL10p5_contact")
 
     D_L = Branch(t, "D_L")
     D_R = Branch(t, "D_R")
@@ -143,8 +140,34 @@ def lhe2tree(filename):
         event.ghzgs1_prime2 = 1
         L1Zg[0] = event.computeP()
 
-        ghz1_prime2_mix = -12110.20
-        ghzgs1_prime2_mix = -7613.351302119843
+        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
+        event.ghz1 = 2
+        event.ghzzp1 = 1
+        event.ezp_L_E = event.ezp_L_M = event.ezp_L_T = aL
+        event.ezp_R_E = event.ezp_R_M = event.ezp_R_T = aR
+        L1_contact[0] = event.computeP()
+
+        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
+        event.ghzzp1 = 1
+        event.ezp_L_E = event.ezp_L_M = event.ezp_L_T = 1
+        event.ezp_R_E = event.ezp_R_M = event.ezp_R_T = 1
+        L1Zg_contact[0] = event.computeP()
+
+        ghz1_prime2_mix = -12110.20 * 1
+        ghzgs1_prime2_mix = -7613.351302119843 * 0
+
+        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
+        event.ghz1 = 1
+        event.ghz1_prime2 = ghz1_prime2_mix
+        fL10p5[0] = event.computeP()
+
+        event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
+        event.ghz1 = 1 + 2 * M_Z**2 * ghz1_prime2_mix/Lz1**2
+        event.ghzzp1 = M_Z**2
+        event.ezp_L_E = event.ezp_L_M = event.ezp_L_T = aL * ghz1_prime2_mix/Lz1**2
+        event.ezp_R_E = event.ezp_R_M = event.ezp_R_T = aR * ghz1_prime2_mix/Lz1**2
+        fL10p5_contact[0] = event.computeP()
+
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
         event.ghz1 = 1
         event.ghz1_prime2 = ghz1_prime2_mix
@@ -152,17 +175,17 @@ def lhe2tree(filename):
         fa1fL1fL1Zg0p33[0] = event.computeP()
 
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
-        event.ghz1 = 1 + M_Z**2 * ghz1_prime2_mix
+        event.ghz1 = 1 + 2 * M_Z**2 * ghz1_prime2_mix/Lz1**2
         event.ghzzp1 = M_Z**2
-        event.ezp_L_E = ezp_L_M = ezp_L_T = gZeL * ghz1_prime2_mix + e * ghzgs1_prime2_mix
-        event.ezp_R_E = ezp_R_M = ezp_R_T = gZeR * ghz1_prime2_mix + e * ghzgs1_prime2_mix
+        event.ezp_L_E = event.ezp_L_M = event.ezp_L_T = aL * ghz1_prime2_mix/Lz1**2 + e * ghzgs1_prime2_mix/Lzg1**2
+        event.ezp_R_E = event.ezp_R_M = event.ezp_R_T = aR * ghz1_prime2_mix/Lz1**2 + e * ghzgs1_prime2_mix/Lzg1**2
         fa1fL1fL1Zg0p33_positive[0] = event.computeP()
 
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
-        event.ghz1 = 1 + M_Z**2 * ghz1_prime2_mix
+        event.ghz1 = 1 + 2 * M_Z**2 * ghz1_prime2_mix/Lz1**2
         event.ghzzp1 = M_Z**2
-        event.ezp_L_E = ezp_L_M = ezp_L_T = gZeL * ghz1_prime2_mix - e * ghzgs1_prime2_mix
-        event.ezp_R_E = ezp_R_M = ezp_R_T = gZeR * ghz1_prime2_mix - e * ghzgs1_prime2_mix
+        event.ezp_L_E = event.ezp_L_M = event.ezp_L_T = aL * ghz1_prime2_mix/Lz1**2 - e * ghzgs1_prime2_mix/Lzg1**2
+        event.ezp_R_E = event.ezp_R_M = event.ezp_R_T = aR * ghz1_prime2_mix/Lz1**2 - e * ghzgs1_prime2_mix/Lzg1**2
         fa1fL1fL1Zg0p33_negative[0] = event.computeP()
 
         D_L[0] = left[0]/leftxsec / (left[0]/leftxsec + SM[0]/SMxsec)
@@ -181,6 +204,7 @@ def lhe2tree(filename):
 
         if i % 1000 == 0:
           print "processed", i, "events"
+          break
   except:
     bad = True
     raise
