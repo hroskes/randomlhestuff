@@ -17,7 +17,7 @@ hleft = ROOT.hleft
 t.Draw("m1>>hright(100,0,100)", "right*{rightfactor}*{rightfactor}/right".format(**fmt))
 hright = ROOT.hright
 
-t.Draw("m1>>hSML(100,0,100)", "SML*{SMfactor}*{leftfactor}/left".format(**fmt))
+t.Draw("m1>>hSML(100,0,100)", "(SML*{SMRefactor} + SML_im*{SMImfactor})*{leftfactor}/left".format(**fmt))
 hSM = ROOT.hSML
 
 t.Draw("m1>>hSMR(100,0,100)", "SMR*{SMfactor}*{rightfactor}/right".format(**fmt))

@@ -121,16 +121,16 @@ def lhe2tree(filename):
         event.ghz1 = event.ghzzp1 = event.ezp_L_E = event.ezp_L_M = event.ezp_L_T = 1
         SML[0] = event.computeP() - SM[0] - left[0]
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
-        event.ghz1 = event.ezp_L_E = event.ezp_L_M = event.ezp_L_T = 1
-        event.ghzzp1 = 1j
+        event.ghz1 = 1j
+        event.ghzzp1 = event.ezp_L_E = event.ezp_L_M = event.ezp_L_T = 1
         SML_im[0] = event.computeP() - SM[0] - left[0]
 
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
         event.ghz1 = event.ghzzp1 = event.ezp_R_E = event.ezp_R_M = event.ezp_R_T = 1
         SMR[0] = event.computeP() - SM[0] - right[0]
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
-        event.ghz1 = event.ezp_R_E = event.ezp_R_M = event.ezp_R_T = 1
-        event.ghzzp1 = 1j
+        event.ghz1 = 1j
+        event.ghzzp1 = event.ezp_R_E = event.ezp_R_M = event.ezp_R_T = 1
         SMR_im[0] = event.computeP() - SM[0] - right[0]
 
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)

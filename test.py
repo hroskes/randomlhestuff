@@ -34,27 +34,18 @@ def ME(ghz1, ghz1_prime2, ghzgs1_prime2):
   m.ghzgs1_prime2 = ghzgs1_prime2
   me1 = m.computeP()
 
-  #now use contact terms
-  m.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
-  m.ghz1 = ghz1 + 2 * ghz1_prime2 * M_Z**2/L1**2
-  m.ghzzp1 = M_Z**2/L1**2
-  m.ezp_L_E = m.ezp_L_M = aL * ghz1_prime2 + e * ghzgs1_prime2
-  m.ezp_R_E = m.ezp_R_M = aR * ghz1_prime2 + e * ghzgs1_prime2
-  me2 = m.computeP()
-
-  #try imaginary?
   #note we only use the imaginary mZ^2 in ghz1
   #the one in ghzzp1 is to cancel this mZ^2
   #https://github.com/JHUGen/JHUGen/blob/4b0ae4d846846d90e2d8aad1dbb2279bbac9e416/JHUGenerator/mod_Higgs.F90#L952
   #so it's still real
   m.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
-  m.ghz1 = ghz1 + 2 * ghz1_prime2 * (M_Z**2 + 1j * M_Z * Ga_Z)/L1**2
+  m.ghz1 = ghz1 + 2 * ghz1_prime2 * (M_Z**2 - 1j*M_Z*Ga_Z)/L1**2
   m.ghzzp1 = M_Z**2/L1**2
   m.ezp_L_E = m.ezp_L_M = aL * ghz1_prime2 + e * ghzgs1_prime2
   m.ezp_R_E = m.ezp_R_M = aR * ghz1_prime2 + e * ghzgs1_prime2
-  me3 = m.computeP()
+  me2 = m.computeP()
 
-  print me1, me2, me3
+  print me1, me2
 
 
 #when used with ghz1 = 1, these give fL1 or fL1Zg = 0.5
