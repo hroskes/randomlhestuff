@@ -43,6 +43,7 @@ def ME(ghz1, ghz1_prime2, ghzgs1_prime2):
   m.ghzzp1 = M_Z**2/L1**2
   m.ezp_L_E = m.ezp_L_M = aL * ghz1_prime2 + e * ghzgs1_prime2
   m.ezp_R_E = m.ezp_R_M = aR * ghz1_prime2 + e * ghzgs1_prime2
+  print m.ghz1, m.ghzzp1*m.ezp_L_E, m.ghzzp1*m.ezp_R_E
   me2 = m.computeP()
 
   print me1, me2

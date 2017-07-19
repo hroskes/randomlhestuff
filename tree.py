@@ -17,6 +17,7 @@ aR = getparameter("aR_lep")
 e = getparameter("cL_lep")
 assert e == getparameter("cR_lep"), e-getparameter("cR_lep")
 M_Z = getparameter("M_Z")
+Ga_Z = getparameter("Ga_Z")
 vev = getparameter("vev")
 Lz1 = getparameter("Lambda_z1")
 Lzg1 = getparameter("Lambda_zgs1")
@@ -162,7 +163,7 @@ def lhe2tree(filename):
         fL10p5[0] = event.computeP()
 
         event.setProcess(TVar.SelfDefine_spin0, TVar.JHUGen, TVar.ZZINDEPENDENT)
-        event.ghz1 = 1 + 2 * M_Z**2 * ghz1_prime2_mix/Lz1**2
+        event.ghz1 = 1 + 2 * (M_Z**2 - 1j*M_Z*Ga_Z) * ghz1_prime2_mix/Lz1**2
         event.ghzzp1 = M_Z**2
         event.ezp_L_E = event.ezp_L_M = event.ezp_L_T = aL * ghz1_prime2_mix/Lz1**2
         event.ezp_R_E = event.ezp_R_M = event.ezp_R_T = aR * ghz1_prime2_mix/Lz1**2
