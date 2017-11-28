@@ -1,0 +1,14 @@
+*.lhe
+*.pyc
+CMSSW_*
+*.dat
+*.DAT
+*.tbl
+*.LHgrid
+br.sm1
+br.sm2
+*.png
+*.eps
+*.root
+*.pdf
+*.C
