@@ -1,12 +1,11 @@
 import abc
+import re
 
 import ROOT
 
 from mela import Mela, SimpleParticleCollection_t
 
 class LHEFileBase(object):
-    __metaclass__ = abc.ABCMeta
-
     """
     Simple class to iterate through an LHE file and calculate probabilities for each event
     Example usage:
@@ -21,11 +20,19 @@ class LHEFileBase(object):
             p0minus = event.computeP()
             h2.Fill(p0plus / (p0plus + p0minus))
     """
+    __metaclass__ = abc.ABCMeta
+
+    __melas = {}
+
     def __init__(self, filename, *melaargs, **kwargs):
         self.isgen = kwargs.pop("isgen", True)
+        reusemela = kwargs.pop("reusemela", False)
         if kwargs: raise ValueError("Unknown kwargs: " + ", ".join(kwargs))
         self.filename = filename
-        self.mela = Mela(*melaargs)
+        if reusemela and melaargs in self.__melas:
+            self.mela = self.__melas[melaargs]
+        else:
+            self.__melas[melaargs] = self.mela = Mela(*melaargs)
         self.f = open(self.filename)
     def __enter__(self, *args, **kwargs):
         self.f.__enter__(*args, **kwargs)
@@ -42,7 +49,7 @@ class LHEFileBase(object):
             if "</event>" in line:
                 try:
                     self._setInputEvent(event)
-                    yield self.mela
+                    yield self
                     event = ""
                 except GeneratorExit:
                     raise
@@ -60,31 +67,52 @@ class LHEFileBase(object):
 
     @classmethod
     def _LHEclassattributes(cls):
-        return "filename", "f", "mela"
+        return "filename", "f", "mela", "isgen"
 
     def __getattr__(self, attr):
+        if attr == "mela": raise RuntimeError("Something is wrong, trying to access mela before it's created")
         return getattr(self.mela, attr)
     def __setattr__(self, attr, value):
         if attr in self._LHEclassattributes():
-            super(LHEFile_JHUGenVBFVH, self).__setattr__(attr, value)
+            super(LHEFileBase, self).__setattr__(attr, value)
         else:
             setattr(self.mela, attr, value)
 
-class LHEFile_Hwithdecay(object):
+class LHEFile_Hwithdecay(LHEFileBase):
     def _setInputEvent(self, event):
         self.mela.setInputEvent_fromLHE(event, self.isgen)
         
 
-class LHEFile_JHUGenVBFVH(object):
+class LHEFile_JHUGenVBFVH(LHEFileBase):
     def _setInputEvent(self, event):
+        self.ids = [int(line.split()[0]) for line in event.strip().split("\n")[2:-1]]
+        if not self.isgen:
+            event = re.sub("^( *-?)([12345]|21) ", r"\g<1>0 ", event, flags=re.MULTILINE)
         particles = event.strip().split("\n")[2:-1]  #remove the first 2 lines, <event> and event info, and the last line, </event>
         self.daughters = SimpleParticleCollection_t([particle for particle in particles if int(particle.split()[0]) == 25])
         self.associated = SimpleParticleCollection_t([particle for particle in particles
-                                                       if abs(int(particle.split()[0])) in (1, 2, 3, 4, 5, 11, 12, 13, 14, 15, 16)
+                                                       if abs(int(particle.split()[0])) in (0, 1, 2, 3, 4, 5, 11, 12, 13, 14, 15, 16)
                                                        and int(particle.split()[1]) == 1])
         self.mothers = SimpleParticleCollection_t([particle for particle in particles if int(particle.split()[1]) == -1])
         assert len(self.daughters) == 1 and len(self.associated) == len(self.mothers) == 2
-        self.mela.setInputEvent(self.daughters, self.associated, self.mothers, True)
+        self.mela.setInputEvent(self.daughters, self.associated, self.mothers, self.isgen)
     @classmethod
     def _LHEclassattributes(cls):
-        return super(cls).LHEclassattributes() + ("daughters", "mothers", "associated")
+        return super(LHEFile_JHUGenVBFVH, cls)._LHEclassattributes() + ("daughters", "mothers", "associated", "ids")
+
+class LHEFile_JHUGenttH(LHEFileBase):
+    def _setInputEvent(self, event):
+        self.ids = [int(line.split()[0]) for line in event.strip().split("\n")[2:-1]]
+        if not self.isgen:
+            event = re.sub("^( *-?)([12345]|21) ", r"\g<1>0 ", event, flags=re.MULTILINE)
+        particles = event.strip().split("\n")[2:-1]  #remove the first 2 lines, <event> and event info, and the last line, </event>
+        self.daughters = SimpleParticleCollection_t([particle for particle in particles if int(particle.split()[0]) == 25])
+        self.associated = SimpleParticleCollection_t([particle for particle in particles
+                                                       if abs(int(particle.split()[0])) in (0, 1, 2, 3, 4, 5, 11, 12, 13, 14, 15, 16)
+                                                       and int(particle.split()[1]) == 1])
+        self.mothers = SimpleParticleCollection_t([particle for particle in particles if int(particle.split()[1]) == -1])
+        assert len(self.daughters) == 1 and len(self.associated) == 6 and len(self.mothers) == 2
+        self.mela.setInputEvent(self.daughters, self.associated, self.mothers, self.isgen)
+    @classmethod
+    def _LHEclassattributes(cls):
+        return super(LHEFile_JHUGenttH, cls)._LHEclassattributes() + ("daughters", "mothers", "associated", "ids")
